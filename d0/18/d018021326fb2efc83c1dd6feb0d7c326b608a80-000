@@ -1,0 +1,87 @@
+# Isolated component prompts N01 to N16
+# Source planche: componentsbycomponents1.png. Range read from the list, 01 to 16. No component 00 exists on the ref.
+# Rule: attach the ref image again for each generation, one image at a time, never overwrite an existing PNG.
+
+## N01 Component_Torii_Pillar
+```text
+Isole uniquement le component 01, Component_Torii_Pillar marque 01 dans l'image. Tall slightly tapered round stone pillar, one single vertical column, exclude the stepped base, both beams and the forest background. fond transparent. via img
+```
+
+## N02 Component_Torii_Base
+```text
+Isole uniquement le component 02, Component_Torii_Base marque 02 dans l'image. Stepped square stone base with three stacked tiers and chamfered edges, exclude the pillar, the lantern pedestal and the path. fond transparent. via img
+```
+
+## N03 Component_Torii_Kasagi
+```text
+Isole uniquement le component 03, Component_Torii_Kasagi marque 03 dans l'image. Long upward curved top beam, thicker center with lifted ends, exclude the pillars, the straight lower beam and the central block. fond transparent. via img
+```
+
+## N04 Component_Torii_Nuki
+```text
+Isole uniquement le component 04, Component_Torii_Nuki marque 04 dans l'image. Straight horizontal rectangular lower beam, exclude the pillars, the curved top beam and the central block. fond transparent. via img
+```
+
+## N05 Component_Torii_Gakuzuka
+```text
+Isole uniquement le component 05, Component_Torii_Gakuzuka marque 05 dans l'image. Small vertical rectangular block centered between the two beams, exclude both beams, the pillars and the background trees. fond transparent. via img
+```
+
+## N06 Component_StoneLantern_Base
+```text
+Isole uniquement le component 06, Component_StoneLantern_Base marque 06 dans l'image. Tall stepped stone pedestal with several stacked square tiers, exclude the lantern head, the torii parts and the statues. fond transparent. via img
+```
+
+## N07 Component_StoneLantern_Top
+```text
+Isole uniquement le component 07, Component_StoneLantern_Top marque 07 dans l'image. Stone lantern head with small roof, window openings and light housing, exclude the pedestal, the shrine roof and the statues. fond transparent. via img
+```
+
+## N08 Component_Komainu_Statue
+```text
+Isole uniquement le component 08, Component_Komainu_Statue marque 08 dans l'image. Guardian lion dog statue seated on a small square pedestal, exclude the lanterns, the shrine facade and the rocks. fond transparent. via img
+```
+
+## N09 Component_Shrine_Roof
+```text
+Isole uniquement le component 09, Component_Shrine_Roof marque 09 dans l'image. Large tiled hipped shrine roof with curved eaves and dense tile rows, exclude the walls, the platform and the lanterns. fond transparent. via img
+```
+
+## N10 Component_Shrine_Bay
+```text
+Isole uniquement le component 10, Component_Shrine_Bay marque 10 dans l'image. Wooden facade bay with lattice windows and plank panels between posts, exclude the roof, the platform and the steps. fond transparent. via img
+```
+
+## N11 Component_Shrine_Platform
+```text
+Isole uniquement le component 11, Component_Shrine_Platform marque 11 dans l'image. Raised platform with front steps and stone underbase, exclude the facade, the roof and the path slabs. fond transparent. via img
+```
+
+## N12 Component_Path_Segment
+```text
+Isole uniquement le component 12, Component_Path_Segment marque 12 dans l'image. Flat rectangular stone path slab with raised border and center joint, exclude the shrine platform, the torii bases and the ground. fond transparent. via img
+```
+
+## N13 Component_Cedar_Trunk
+```text
+Isole uniquement le component 13, Component_Cedar_Trunk marque 13 dans l'image. Tall straight cedar trunk with slight taper and flared root base, exclude the foliage, the ground slab and the rocks. fond transparent. via img
+```
+
+## N14 Component_Foliage_Cluster
+```text
+Isole uniquement le component 14, Component_Foliage_Cluster marque 14 dans l'image. Round leafy canopy cluster with dense small leaves, exclude the trunk, the ground and the shrine roof. fond transparent. via img
+```
+
+## N15 Component_Ground_Patch
+```text
+Isole uniquement le component 15, Component_Ground_Patch marque 15 dans l'image. Low square ground slab with a slight slope, exclude the path, the rocks and the trunks. fond transparent. via img
+```
+
+## N16 Component_Rock_Scatter
+```text
+Isole uniquement le component 16, Component_Rock_Scatter marque 16 dans l'image. Single faceted grey ground rock, exclude the ground slab, the trunks and the statues. fond transparent. via img
+```
+
+## Planche defects noted on the ref
+- Marker 12 appears twice: once on the torii base (bottom left), once on the path. The list defines 12 as the path segment, so the prompt follows the list.
+- Marker 2 points at the lantern pedestal on the picture while the list defines 02 as the torii base. The prompt follows the list.

@@ -1,0 +1,46 @@
+# Comparaison Composants Isolés : Nano Banana vs ChatGPT
+
+Dossier de génération et d'archivage des assets isolés du sanctuaire japonais (Skill: `zenray-houdini-generate-isolated-components`).
+
+## Références utilisées en entrée (3 images)
+
+1. `/Users/zenray/Downloads/tmp-FirstJapanModeling/refplacement.png` (composition et disposition générale)
+2. `/Users/zenray/Downloads/tmp-FirstJapanModeling/reforiginalcolor.png` (palette chromatique et matériaux)
+3. `/Users/zenray/Downloads/tmp-FirstJapanModeling/componentsbycomponents1.png` (planche numérotée N01 à N16)
+
+---
+
+## Structure des dossiers
+
+- `nanobanana/` : Assets générés via le modèle Google Image (Nano Banana) sur fond magenta `#FF00FF`, détourés en RGBA avec désaturation des bords (despill) et canal alpha vérifié (alpha min = 0).
+- `chatgpt/` : Assets générés via ChatGPT avec transparence native RGBA.
+
+---
+
+## Inventaire des composants
+
+| Numéro | Nom du composant | ChatGPT | Nano Banana |
+|---|---|---|---|
+| N01 | Component_Torii_Pillar | OK (1024x1536) | OK (1024x1024) |
+| N02 | Component_Torii_Base | OK (1254x1254) | OK (1024x1024) |
+| N03 | Component_Torii_Kasagi | OK (2172x724) | OK (1024x1024) |
+| N04 | Component_Torii_Nuki | OK (2172x724) | OK (1024x1024) |
+| N05 | Component_Torii_Gakuzuka | OK (1341x1173) | OK (1024x1024) |
+| N06 | Component_StoneLantern_Base | OK (1536x1024) | OK (1024x1024) |
+| N07 | Component_StoneLantern_Top | OK (1254x1254) | OK (1024x1024) |
+| N08 | Component_Komainu_Statue | OK (1254x1254) | OK (1024x1024) |
+| N09 | Component_Shrine_Roof | OK (1254x1254) | OK (1024x1024) |
+| N10 | Component_Shrine_Bay | OK (1536x1024) | OK (1024x1024) |
+| N11 | Component_Shrine_Platform | OK (1774x887) | OK (1024x1024) |
+| N12 | Component_Path_Segment | OK (1774x887) | En attente de quota |
+| N13 | Component_Cedar_Trunk | OK (1024x1536) | En attente de quota |
+| N14 | Component_Foliage_Cluster | OK (1536x1024) | En attente de quota |
+| N15 | Component_Ground_Patch | OK (1774x887) | En attente de quota |
+| N16 | Component_Rock_Scatter | OK (1536x1024) | En attente de quota |
+
+---
+
+## Script d'extraction et validation
+
+- `key_magenta.py` : Script Python pour extraire la couche alpha propre et supprimer tout spill magenta.
+- Validation : Tous les PNG possèdent un canal alpha atteignant 0 (transparence totale hors de l'objet).
