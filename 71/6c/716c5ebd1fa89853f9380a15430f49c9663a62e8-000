@@ -1,0 +1,32 @@
+[
+  {
+    "number": 12,
+    "name": "Component12",
+    "slug": "Component_Path_Segment",
+    "prompt": "Isolate only component 12, Component_Path_Segment marked 12 in the reference image componentsbycomponents1.png. One single isolated 3D asset: flat modular Japanese stone pathway flagstone slab (sandō paving stone) with chiseled stone borders and subtle center joints, weathered grey pavement slab, exclude shrine platform, torii bases and surrounding dirt ground. Place on a solid pure flat uniform magenta background (#FF00FF) with no shadows, completely uniform magenta."
+  },
+  {
+    "number": 13,
+    "name": "Component13",
+    "slug": "Component_Cedar_Trunk",
+    "prompt": "Isolate only component 13, Component_Cedar_Trunk marked 13 in the reference image componentsbycomponents1.png. One single isolated 3D asset: tall straight Japanese cedar trunk (sugi) with slight taper, reddish fibrous bark and flared root base, exclude foliage canopy, ground slab and rocks. Place on a solid pure flat uniform magenta background (#FF00FF) with no shadows, completely uniform magenta."
+  },
+  {
+    "number": 14,
+    "name": "Component14",
+    "slug": "Component_Foliage_Cluster",
+    "prompt": "Isolate only component 14, Component_Foliage_Cluster marked 14 in the reference image componentsbycomponents1.png. One single isolated 3D asset: round leafy cedar canopy cluster with dense small needles / foliage tufts, deep green cedar leaves, exclude trunk, branches, ground and shrine. Place on a solid pure flat uniform magenta background (#FF00FF) with no shadows, completely uniform magenta."
+  },
+  {
+    "number": 15,
+    "name": "Component15",
+    "slug": "Component_Ground_Patch",
+    "prompt": "Isolate only component 15, Component_Ground_Patch marked 15 in the reference image componentsbycomponents1.png. One single isolated 3D asset: low square mossy ground slab with subtle slope and soil texture, exclude pathway stones, trunks and rocks. Place on a solid pure flat uniform magenta background (#FF00FF) with no shadows, completely uniform magenta."
+  },
+  {
+    "number": 16,
+    "name": "Component16",
+    "slug": "Component_Rock_Scatter",
+    "prompt": "Isolate only component 16, Component_Rock_Scatter marked 16 in the reference image componentsbycomponents1.png. One single isolated 3D asset: single faceted grey ground rock / stone boulder with moss patches, exclude ground slab, trunks and statues. Place on a solid pure flat uniform magenta background (#FF00FF) with no shadows, completely uniform magenta."
+  }
+]
