@@ -1,0 +1,45 @@
+# Validation pass for isolated component PNGs. 2026-09-17.
+# Checks every ComponentNN.png in its own folder: file exists, has an
+# alpha channel, and reaches full transparency at least once.
+import os
+import sys
+
+from PIL import Image
+
+FIRST = 1
+LAST = 16
+PREFIX = "Component"
+SUFFIX = ".png"
+
+
+def check_file(path):
+    if not os.path.isfile(path):
+        return False, "missing file"
+    image = Image.open(path)
+    if "A" not in image.getbands():
+        return False, "no alpha channel, got mode %s" % image.mode
+    minimum, maximum = image.getchannel("A").getextrema()
+    if minimum != 0:
+        return False, "never fully transparent, alpha min %d" % minimum
+    return True, "mode %s size %dx%d alpha max %d" % (
+        image.mode, image.width, image.height, maximum)
+
+
+def main():
+    folder = os.path.dirname(os.path.abspath(__file__))
+    failures = 0
+    for number in range(FIRST, LAST + 1):
+        name = "%s%02d%s" % (PREFIX, number, SUFFIX)
+        ok, detail = check_file(os.path.join(folder, name))
+        print("%s %s: %s" % ("PASS" if ok else "FAIL", name, detail))
+        if not ok:
+            failures += 1
+    if failures:
+        print("%d file(s) failed" % failures)
+        return 1
+    print("all %d files valid" % (LAST - FIRST + 1))
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
