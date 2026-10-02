@@ -1,0 +1,8 @@
+# Post 01 : les fichiers vivent dans Memory
+
+Le post est une source durable, donc il est range dans la memoire et non dans ce chantier :
+
+`~/.claude/Memory1/SocialMedia/Posts/short-01-modeling-japan/`
+
+Les trois entrees de ce dossier sont des LIENS vers ces fichiers, pour les ouvrir sans changer de
+dossier. La fiche du post pointe elle-meme vers `../01_master/short_01.mp4`.

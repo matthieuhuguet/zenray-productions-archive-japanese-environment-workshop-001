@@ -1,0 +1,14 @@
+# Short 01 : Modeling Japan, From Pictures
+
+| Dossier | Ce qu il contient |
+|---|---|
+| `01_master/` | `short_01.mp4`, le master livrable : 1080x1920, 60 images par seconde, 20,00 s, son AAC |
+| `02_sources/` | la prise OBS, la plaque de reference en noir et blanc, l image de cloture, la piste musicale entiere |
+| `03_work/` | les cartons de texte et les plans intermediaires, tout est regenerable |
+| `Post/` | le post a publier : legende complete, version courte, sous-titres, texte alternatif |
+| `04_plan/` | `short_01_plan.md` le plan de montage, `short_01_build.sh` le script qui refait le master |
+
+Refaire le master : `bash 04_plan/short_01_build.sh`. Toutes les valeurs vivent dans son bloc PARAMS.
+Style `short-editor-hda-v003` : sous-titres anglais en degrade `#99f8d3` vers `#76a2d0`, de gauche a
+droite avec une legere montee, kaomoji sur le dernier carton. Detail dans
+`~/.claude/skills/zenray-houdini/Shorts1.md`.

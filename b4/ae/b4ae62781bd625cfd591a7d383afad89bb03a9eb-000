@@ -1,0 +1,79 @@
+# Short 01 ModelingJapan, plan de montage
+
+Format retenu : **1080x1920 (9:16 plein ecran), 60 fps, 18,00 s exactes (1080 frames)**.
+
+Source du format : `Shorts1.md`, section « REGLE STRICTE DE FORMAT : 9:16 VERTICAL OBLIGATOIRE »
+du corpus socialmedia (`zenray-html-photoshop-pdf-hda-socialmedia-shorts-reel/SKILL.md`, ligne 590
+et suivantes) qui autorise explicitement le « Format leger alternatif : 1080x1920 a 60 fps ».
+Le 24 ou 30 fps demande dans la consigne n'existe nulle part dans le style : tout le corpus est a
+60 fps (`Shorts1.md`, en-tete « 4K natif, 18,00 s, 60 ips », et section 4:5 du 2026-09-15).
+Le 60 fps est donc retenu, et c'est le seul point ou la consigne a ete tranchee par le style.
+
+## Table des plans
+
+| Plan | Debut | Fin | Duree | Contenu | Sous-titre a l'ecran |
+|---|---|---|---|---|---|
+| 0 | 0,00 s | 3,00 s | 3,00 s | `plan00_ref_bw.png`, image de reference en noir et blanc, fit letterbox, jamais rognee | TITRE : `today I want to share something in 3D` / `really useful` |
+| 1 | 3,00 s | 8,00 s | 5,00 s | travelling camera dans la scene Houdini, cadrage repris de l'image de reference | cue 1 (3,00 a 5,50 s) puis cue 2 (5,50 a 8,00 s) |
+| 2 | 8,00 s | 13,00 s | 5,00 s | vue statique trois quarts arriere du toit | cue 3 (8,00 a 10,50 s) puis cue 4 (10,50 a 13,00 s) |
+| 3 | 13,00 s | 18,00 s | 5,00 s | turn-over autour du toit et du petit temple japonais | cue 5 (13,00 a 15,50 s) puis cue 6 (15,50 a 18,00 s) |
+
+Les plans 1 a 3 sont trois extraits d'une seule capture OBS,
+`captures/obs_take_01.mov`, decoupes par trois offsets parametrables en tete de
+`short_01_build.sh` (`PLAN1_IN`, `PLAN2_IN`, `PLAN3_IN`).
+
+## Sous-titres, decoupage en 6 cues de 2,50 s
+
+Les cues courent de 3,00 s a 18,00 s, soit 15,00 s pour 6 cues de 2,50 s. Le texte de Matthieu est
+verbatim, seule la grammaire est touchee (apostrophes et accents), aucun mot n'est ajoute, retire
+ni reordonne.
+
+| Cue | Debut | Fin | Ligne 1 | Ligne 2 |
+|---|---|---|---|---|
+| 1 | 3,00 s | 5,50 s | en fonction du plan que vous voulez faire, | que ce soit un plan 3D, |
+| 2 | 5,50 s | 8,00 s | il n'est pas toujours utile ni necessaire | d'absolument tout modeliser. |
+| 3 | 8,00 s | 10,50 s | parfois il vaut mieux se concentrer | uniquement sur ce qui sera visible dans le plan. |
+| 4 | 10,50 s | 13,00 s | parfois il vaut mieux faire en sorte | de ne rien modeliser, |
+| 5 | 13,00 s | 15,50 s | car il ne faut pas oublier les prochaines etapes | qui prendront du temps, |
+| 6 | 15,50 s | 18,00 s | comme le texturing | et le lighting. |
+
+Regle de lisibilite telephone : jamais plus de deux lignes a l'ecran, chaque ligne tenue sous
+87 % de la largeur du cadre par auto-fit descendant.
+
+## Valeurs de style retenues, avec leur source
+
+Les valeurs du style canonique `short-editor-hda-v002` sont donnees en 3072x3840. Elles sont
+transposees ici a l'echelle verticale 1920/3840 = **0,5**, la hauteur etant la dimension qui
+gouverne la typographie et le placement.
+
+| Parametre | Valeur 1080x1920 | Valeur source | Section d'origine |
+|---|---|---|---|
+| Police des sous-titres | `ArchiveGaramondStd-BoldItalic.ttf`, 100 % Garamond, aucun melange aleatoire | idem | `Shorts1.md`, « 2026-09-16 : Style V2 Valide short-editor-hda-v002 », 2. Sous-titres bas v2 |
+| Couleur du texte | `#ef9f47` (RGB 239, 159, 71) | idem | meme section |
+| Contour | zero stroke, aucun contour noir | idem | meme section |
+| Ombre portee | calque noir `(0, 0, 0, 230)`, decale de `(0, 18)` px, `GaussianBlur(radius=8)` | `(0, 36)` px, blur 16 | meme section, valeurs divisees par 2 |
+| Taille des sous-titres | auto-fit de 60 px a 40 px, defaut 54 px | 120 a 80 px, defaut 108 | `short_editor.py`, `PARAMS['subtitles']['size_max'/'size_min'/'default_size']` |
+| Position ligne 1 | y = 1480 (centre de carte) | y = 2960 | meme section, « ligne 1 a y=2960 » |
+| Position ligne 2 | y = 1575 | y = 3150 | meme section, « ligne 2 a y=3150 » |
+| Marge de securite laterale | `max_width_ratio` 0,87, soit 70 px libres de chaque bord | idem | `short_editor.py`, `PARAMS['subtitles']['max_width_ratio']` |
+| Marge de securite basse | 345 px sous la ligne 2, hors zone d'interface Reels et Shorts | principe identique | corpus socialmedia, ligne 755, « hors des zones couvertes par l'interface Reels/Shorts en haut et en bas » |
+| Espace entre mots | 16 px | 32 px | `short_editor.py`, `PARAMS['subtitles']['space']`, divise par 2 |
+| Titre d'ouverture | `SF-Pro-Display-Bold.otf`, all-caps, 2 lignes, tracking 0,85 sur la ligne 1, ligne 2 justifiee bord a bord | idem, 170 px et 62 px | `Shorts1.md`, meme entree, 1. Titre haut v2 avec justification bord a bord |
+| Taille du titre | ligne 1 a 85 px (y = 270), ligne 2 a 31 px (y = 357) | 170 px (y = 540) et 62 px (y = 715) | meme section, valeurs divisees par 2 |
+| Couleur du titre | `#c4c7ce` (gris perle, RGB 196, 199, 206) | idem | meme section |
+| Fond des sous-titres | aucun. Pas de capsule, pas de bandeau, pas de boite : seule l'ombre portee detache le texte | idem | `Shorts1.md`, « Suppression de la capsule de titre », et 2. Sous-titres bas v2 « zero stroke » |
+| Audio | master silencieux, a noter comme tel ; a la pose : fade in 0,2 a 0,5 s, fade out 0,8 s, PUIS normalisation a -14 LUFS en dernier | idem | `Shorts1.md`, section 4:5 du 2026-09-15, « Masters silencieux » |
+
+## Ecarts assumes par rapport au style, et pourquoi
+
+1. **Pas d'animation punch canon ni de desintegration en poussiere.** Ces deux effets vivent dans
+   la boucle frame par frame de `short_editor.py` (`punch_curve`, `make_dust_frames_inplace`).
+   `short_editor.py` ne couvre pas ce short : son interface `PARAMS` n'admet qu'**une seule**
+   source video, un seul crop et une image de cloture, alors qu'il faut ici une plaque image en
+   tete puis trois extraits d'une meme capture. Le montage passe donc par ffmpeg, avec des cartes
+   de sous-titres rendues par Pillow au style exact ci-dessus, en pose fixe.
+2. **Pas de flyer commercial de cloture** (`Shorts1.md`, 4. Flyer commercial) : la consigne fixe
+   18,00 s et quatre plans, sans image de fin.
+3. **ffmpeg de ce Mac sans libass ni drawtext** : verifie par `ffmpeg -filters`, aucun filtre
+   `subtitles`, `ass` ni `drawtext`. Le texte ne peut donc etre incruste que par des PNG a canal
+   alpha composites en `overlay`, ce que fait le script.

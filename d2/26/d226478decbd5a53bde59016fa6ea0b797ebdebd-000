@@ -1,0 +1,338 @@
+#!/usr/bin/env bash
+# ZenRay short 01 ModelingJapan, edit script. 2026-09-17 22:10
+# One file = one HDA: every value lives in the PARAMS block below and nowhere else.
+#
+# Why ffmpeg and not short_editor.py: short_editor.py accepts ONE video source plus one closing
+# image, while this short needs a still black and white plate first, then three cuts taken from a
+# single OBS capture. Its PARAMS interface cannot express that, so the compositing is done here.
+# Subtitle and title cards are rendered by Pillow with the exact short-editor-hda-v002 values
+# (see short_01_plan.md), because this Mac's ffmpeg carries neither libass nor drawtext.
+#
+# FR : un seul fichier, toutes les valeurs dans PARAMS. short_editor.py n admet qu une seule source
+# video, donc il ne couvre pas ce short ; le texte passe par des PNG Pillow faute de libass.
+set -euo pipefail
+
+# ===== PARAMS (edit here, nowhere else) =====
+PROJECT_DIR="/Users/zenray/Create/Build/Productions/ZenRayHoudini/ModelingJapan_01"
+SHORT_DIR="/Users/zenray/Downloads/tmp-ModelingJapan1/short-01-modeling-japan"
+SHORTS_DIR="${SHORT_DIR}/02_sources"
+OBS_TAKE="${SHORT_DIR}/02_sources/obs_take_02.mov"
+REF_BW="${SHORTS_DIR}/plan00_ref_bw.png"
+END_CARD="${SHORT_DIR}/02_sources/end_card_imagefinal.png"
+MUSIC_SRC="${SHORT_DIR}/02_sources/music_source_3Qusl3PoL6M.wav"
+WORK_DIR="${SHORT_DIR}/03_work"
+OUT="${SHORT_DIR}/01_master/short_01.mp4"
+
+CANVAS_W=1080
+CANVAS_H=1920
+FPS=60
+
+PLAN0_DUR=3.0          # black and white reference plate, fit letterbox
+PLAN1_IN=4.35          # travelling. Measured on take 02 : playback starts at 4.15, motion until 9.60
+PLAN1_DUR=5.0
+PLAN2_IN=11.00         # STATIC shot : held from one frame, measured flat from 9.75 to 13.25
+PLAN2_DUR=5.0
+PLAN3_IN=13.55         # turn over, measured from 13.50 to 17.60 in the take
+PLAN3_SRC=4.05         # source length of the turn over, retimed to PLAN3_DUR
+PLAN4_DUR=2.0          # closing image, fit letterbox
+TOTAL_DUR=20.0
+MUSIC_IN=80.0          # 1 min 20 s in the source track
+MUSIC_FADE_IN=0.35
+MUSIC_FADE_OUT=0.8
+MUSIC_LUFS=-14
+SUB_FADE_IN=0.30       # subtitles fade in, then fade out : never a hard pop
+SUB_FADE_OUT=0.40
+SUB_CANON=0.22         # line 2 enters after line 1, like a canon
+TITLE_FADE_IN=0.30
+TITLE_FADE_OUT=0.35
+PLAN3_DUR=5.0
+
+# Viewport crop inside the OBS take, before the 9:16 upscale.
+# Leave empty to center crop the whole frame to 9:16; set "w:h:x:y" to cut the Houdini chrome out.
+OBS_CROP="820:1458:1367:500"   # measured on a frame : the 9:16 camera mask, mask value 24
+
+CRF=17
+PRESET="slow"
+# ===== END PARAMS =====
+
+# Fail loudly rather than render a silently incomplete short.
+[[ -f "${OBS_TAKE}" ]] || { echo "MISSING OBS capture: ${OBS_TAKE}" >&2; exit 1; }
+[[ -f "${REF_BW}" ]] || { echo "MISSING black and white plate: ${REF_BW}" >&2; exit 1; }
+[[ -f "${END_CARD}" ]] || { echo "MISSING closing image: ${END_CARD}" >&2; exit 1; }
+[[ -f "${MUSIC_SRC}" ]] || { echo "MISSING music: ${MUSIC_SRC}" >&2; exit 1; }
+command -v ffmpeg >/dev/null || { echo "MISSING ffmpeg" >&2; exit 1; }
+"${HOME}/.venvs/shorts/bin/python" -c 'import PIL' \
+  || { echo "MISSING Pillow in ~/.venvs/shorts" >&2; exit 1; }
+
+mkdir -p "${WORK_DIR}"
+
+# ---- 1. Render the title and subtitle cards (short-editor-hda-v002 style) ----
+"${HOME}/.venvs/shorts/bin/python" - "${WORK_DIR}" "${CANVAS_W}" "${CANVAS_H}" <<'PY'
+# Card renderer: Garamond Bold Italic, #ef9f47, no stroke, soft black drop shadow.
+# FR : cartes de texte au style short-editor-hda-v002, valeurs divisees par 2 depuis le 4K.
+import os
+import sys
+from PIL import Image, ImageDraw, ImageFilter, ImageFont
+
+WORK, W, H = sys.argv[1], int(sys.argv[2]), int(sys.argv[3])
+
+# Style v003 (2026-09-18) : subtitles filled with a left to right gradient tilted slightly up.
+# Colours given by Matthieu : #99f8d3 (mint) to #76a2d0 (blue), and they fill the TITLE.
+# The subtitles keep the flat v002 amber #ef9f47. Change GRADIENT_STOPS alone to retune.
+GRADIENT_STOPS = [(0.00, (153, 248, 211)), (1.00, (118, 162, 208))]
+GRADIENT_ANGLE_DEG = -8.0        # negative tilts the sweep from bottom left to top right
+
+STYLE = {
+    'sub_font': os.path.expanduser('~/Library/Fonts/ArchiveGaramondStd-BoldItalic.ttf'),
+    'kaomoji_font': '/System/Library/Fonts/Hiragino Sans GB.ttc',   # measured : it draws the kaomoji glyphs
+    'title_font': os.path.expanduser('~/Library/Fonts/SF-Pro-Display-Bold.otf'),
+    'sub_color': (239, 159, 71, 255),
+    'title_color': (196, 199, 206, 255),
+    'shadow_color': (0, 0, 0, 230),
+    'shadow_offset_y': 18,
+    'shadow_blur': 8,
+    'max_width_ratio': 0.87,
+    'word_space': 16,
+    'size_max': 60,
+    'size_min': 40,
+    'line1_y': 1480,
+    'line2_y': 1575,
+    'title_line1': {'text': 'MODELING JAPAN', 'size': 64, 'y': 250, 'tracking': 0.10},
+    'title_line2': {'text': 'FROM PICTURES', 'size': 44, 'y': 355, 'word_space_mult': 2.2},
+}
+
+CUES = [
+    ("depending on the shot you want to make,", "even a 3D shot,"),
+    ("it is not always useful or necessary", "to model absolutely everything."),
+    ("sometimes it is better to focus only", "on what will be visible in the shot."),
+    ("sometimes it is better to model nothing at all,", "because the next steps take time,"),
+    ("like texturing and lighting.", "（＾ω＾）"),
+]
+
+max_w = int(W * STYLE['max_width_ratio'])
+
+
+def line_width(text, size):
+    font = ImageFont.truetype(STYLE['sub_font'], size)
+    words = text.split(' ')
+    return sum(font.getlength(w) for w in words) + STYLE['word_space'] * (len(words) - 1), font
+
+
+def auto_fit(text):
+    # Descending auto fit so no line can ever be cropped on a phone.
+    for size in range(STYLE['size_max'], STYLE['size_min'] - 1, -1):
+        width, font = line_width(text, size)
+        if width <= max_w:
+            return size, width, font
+    size = STYLE['size_min']
+    width, font = line_width(text, size)
+    return size, width, font
+
+
+def gradient_sheet():
+    # One left to right ramp over the stops, then rotated so the sweep rises slightly.
+    import math
+    diag = int(math.hypot(W, H)) + 2
+    ramp = Image.new('RGB', (diag, 1))
+    px = ramp.load()
+    for x in range(diag):
+        t = x / float(diag - 1)
+        for i in range(len(GRADIENT_STOPS) - 1):
+            t0, c0 = GRADIENT_STOPS[i]
+            t1, c1 = GRADIENT_STOPS[i + 1]
+            if t0 <= t <= t1:
+                k = 0.0 if t1 == t0 else (t - t0) / (t1 - t0)
+                px[x, 0] = tuple(int(round(c0[j] + (c1[j] - c0[j]) * k)) for j in range(3))
+                break
+        else:
+            px[x, 0] = GRADIENT_STOPS[-1][1]
+    sheet = ramp.resize((diag, diag), Image.NEAREST).rotate(GRADIENT_ANGLE_DEG, resample=Image.BICUBIC)
+    left, top = (diag - W) // 2, (diag - H) // 2
+    return sheet.crop((left, top, left + W, top + H))
+
+
+GRADIENT = gradient_sheet()
+
+
+def font_for(word, size):
+    # Kaomoji glyphs live in Hiragino, the Garamond has none of them.
+    if any(ord(c) > 0x2000 for c in word):
+        return ImageFont.truetype(STYLE['kaomoji_font'], size)
+    return ImageFont.truetype(STYLE['sub_font'], size)
+
+
+def subtitle_card(text, center_y):
+    size, width, font = auto_fit(text)
+    card = Image.new('RGBA', (W, H), (0, 0, 0, 0))
+    shadow = Image.new('RGBA', (W, H), (0, 0, 0, 0))
+    d_tx, d_sh = ImageDraw.Draw(card), ImageDraw.Draw(shadow)
+    x = (W - width) / 2.0
+    base_y = center_y + size * 0.35
+    for word in text.split(' '):
+        f = font_for(word, size)
+        d_sh.text((x, base_y + STYLE['shadow_offset_y']), word, font=f,
+                  fill=STYLE['shadow_color'], anchor='ls')
+        d_tx.text((x, base_y), word, font=f, fill=STYLE['sub_color'], anchor='ls')
+        x += f.getlength(word) + STYLE['word_space']
+    shadow = shadow.filter(ImageFilter.GaussianBlur(radius=STYLE['shadow_blur']))
+    return Image.alpha_composite(shadow, card)
+
+
+def draw_tracked(draw, text, font, y, color, tracking_ratio):
+    widths = [draw.textlength(c, font=font) for c in text]
+    avg = sum(widths) / len(widths)
+    tracking = avg * tracking_ratio
+    total = sum(widths) + tracking * (len(text) - 1)
+    x = (W - total) / 2.0
+    x0 = x
+    for c, cw in zip(text, widths):
+        draw.text((x, y), c, font=font, fill=color)
+        x += cw + tracking
+    return x0, x - tracking
+
+
+def draw_justified(draw, text, font, y, color, x0, x1, mult):
+    # Batman reference justification: the line spans exactly the line above it.
+    words = text.split(' ')
+    runs = [[list(w), [draw.textlength(c, font=font) for c in w]] for w in words]
+    chars_w = sum(sum(r[1]) for r in runs)
+    letter_gaps = sum(len(r[0]) - 1 for r in runs)
+    word_gaps = len(words) - 1
+    denom = letter_gaps + mult * word_gaps
+    tracking = ((x1 - x0) - chars_w) / denom if denom > 0 else 0.0
+    x = x0
+    for i, (chars, widths) in enumerate(runs):
+        for c, cw in zip(chars, widths):
+            draw.text((x, y), c, font=font, fill=color)
+            x += cw + tracking
+        if i < word_gaps:
+            x += tracking * mult - tracking
+
+
+def title_card():
+    # The title carries the gradient : text drawn as a mask, gradient poured through it.
+    mask = Image.new('L', (W, H), 0)
+    shadow = Image.new('RGBA', (W, H), (0, 0, 0, 0))
+    d_ms, d_sh = ImageDraw.Draw(mask), ImageDraw.Draw(shadow)
+    t1, t2 = STYLE['title_line1'], STYLE['title_line2']
+    f1 = ImageFont.truetype(STYLE['title_font'], t1['size'])
+    f2 = ImageFont.truetype(STYLE['title_font'], t2['size'])
+    off = STYLE['shadow_offset_y']
+    x0, x1 = draw_tracked(d_sh, t1['text'], f1, t1['y'] + off, STYLE['shadow_color'], t1['tracking'])
+    draw_justified(d_sh, t2['text'], f2, t2['y'] + off, STYLE['shadow_color'], x0, x1, t2['word_space_mult'])
+    x0, x1 = draw_tracked(d_ms, t1['text'], f1, t1['y'], 255, t1['tracking'])
+    draw_justified(d_ms, t2['text'], f2, t2['y'], 255, x0, x1, t2['word_space_mult'])
+    shadow = shadow.filter(ImageFilter.GaussianBlur(radius=STYLE['shadow_blur']))
+    card = GRADIENT.convert('RGBA')
+    card.putalpha(mask)
+    return Image.alpha_composite(shadow, card)
+
+
+title_card().save(os.path.join(WORK, 'card_title.png'))
+for ci, (l1, l2) in enumerate(CUES, start=1):
+    subtitle_card(l1, STYLE['line1_y']).save(os.path.join(WORK, 'card_cue%02d_l1.png' % ci))
+    subtitle_card(l2, STYLE['line2_y']).save(os.path.join(WORK, 'card_cue%02d_l2.png' % ci))
+print('cards rendered in %s' % WORK)
+PY
+
+# ---- 2. Plan 0: the black and white reference plate, fit letterbox, never cropped ----
+ffmpeg -y -v error -loop 1 -framerate "${FPS}" -t "${PLAN0_DUR}" -i "${REF_BW}" \
+  -vf "scale=${CANVAS_W}:${CANVAS_H}:force_original_aspect_ratio=decrease,pad=${CANVAS_W}:${CANVAS_H}:(ow-iw)/2:(oh-ih)/2:color=black,format=yuv420p" \
+  -c:v libx264 -preset "${PRESET}" -crf "${CRF}" -r "${FPS}" "${WORK_DIR}/plan0.mp4"
+
+# ---- 3. Plans 1 to 3: three cuts of the single OBS take, upscaled to 9:16 ----
+if [[ -n "${OBS_CROP}" ]]; then
+  CROP_FILTER="crop=${OBS_CROP}"
+else
+  CROP_FILTER="crop='min(iw,ih*9/16)':'min(ih,iw*16/9)'"
+fi
+
+cut_plan () {
+  local in_point="$1" duration="$2" out_file="$3"
+  ffmpeg -y -v error -ss "${in_point}" -t "${duration}" -i "${OBS_TAKE}" \
+    -vf "fps=${FPS},${CROP_FILTER},scale=${CANVAS_W}:${CANVAS_H}:flags=lanczos,format=yuv420p" \
+    -an -c:v libx264 -preset "${PRESET}" -crf "${CRF}" "${out_file}"
+}
+cut_plan "${PLAN1_IN}" "${PLAN1_DUR}" "${WORK_DIR}/plan1.mp4"
+# Plan 2 is a STATIC camera : one frame held for the full duration, so nothing can drift.
+ffmpeg -y -v error -ss "${PLAN2_IN}" -i "${OBS_TAKE}" -frames:v 1 \
+  -vf "${CROP_FILTER},scale=${CANVAS_W}:${CANVAS_H}:flags=lanczos" "${WORK_DIR}/plan2_still.png"
+ffmpeg -y -v error -loop 1 -framerate "${FPS}" -t "${PLAN2_DUR}" -i "${WORK_DIR}/plan2_still.png" \
+  -vf "format=yuv420p" -an -c:v libx264 -preset "${PRESET}" -crf "${CRF}" -r "${FPS}" "${WORK_DIR}/plan2.mp4"
+# Plan 3 measured shorter than the target : retimed, the factor is computed, never guessed.
+RETIME=$(/usr/bin/awk -v d="${PLAN3_DUR}" -v src="${PLAN3_SRC}" 'BEGIN{printf "%.5f", d/src}')
+ffmpeg -y -v error -ss "${PLAN3_IN}" -t "${PLAN3_SRC}" -i "${OBS_TAKE}" \
+  -vf "${CROP_FILTER},scale=${CANVAS_W}:${CANVAS_H}:flags=lanczos,setpts=PTS*${RETIME},fps=${FPS},format=yuv420p" \
+  -an -c:v libx264 -preset "${PRESET}" -crf "${CRF}" "${WORK_DIR}/plan3.mp4"
+
+# ---- 3b. Plan 4: the closing image, fit letterbox, never cropped ----
+ffmpeg -y -v error -loop 1 -framerate "${FPS}" -t "${PLAN4_DUR}" -i "${END_CARD}" \
+  -vf "scale=${CANVAS_W}:${CANVAS_H}:force_original_aspect_ratio=decrease,pad=${CANVAS_W}:${CANVAS_H}:(ow-iw)/2:(oh-ih)/2:color=black,format=yuv420p" \
+  -an -c:v libx264 -preset "${PRESET}" -crf "${CRF}" -r "${FPS}" "${WORK_DIR}/plan4.mp4"
+
+# ---- 4. Concat the five plans ----
+: > "${WORK_DIR}/concat.txt"
+for p in plan0 plan1 plan2 plan3 plan4; do
+  echo "file '${WORK_DIR}/${p}.mp4'" >> "${WORK_DIR}/concat.txt"
+done
+ffmpeg -y -v error -f concat -safe 0 -i "${WORK_DIR}/concat.txt" -c copy "${WORK_DIR}/timeline.mp4"
+
+# ---- 5. Burn the title (0 to 3 s) and the six cues (3 to 18 s, 2.5 s each) ----
+# Silent master on purpose: no music picked yet. At the posting pass, add fade in 0.2 to 0.5 s,
+# fade out 0.8 s, THEN normalize to -14 LUFS last (never before the fades).
+AW () { /usr/bin/awk -v a="$1" -v b="$2" 'BEGIN{printf "%.3f", a+b}'; }
+
+# Title : fades in, then out, before the plate cuts.
+T_OUT=$(AW "${PLAN0_DUR}" "-${TITLE_FADE_OUT}")
+FILTER="[1:v]format=rgba,fade=t=in:st=0.10:d=${TITLE_FADE_IN}:alpha=1"
+FILTER="${FILTER},fade=t=out:st=${T_OUT}:d=${TITLE_FADE_OUT}:alpha=1[t0]"
+FILTER="${FILTER};[0:v][t0]overlay=0:0:enable='between(t,0,${PLAN0_DUR})'[v0]"
+CHAIN="[v0]"
+IDX=2
+CUE_START=3.0
+CUE_DUR=3.0
+for c in 01 02 03 04 05; do
+  END=$(AW "${CUE_START}" "${CUE_DUR}")
+  OUT_ST=$(AW "${END}" "-${SUB_FADE_OUT}")
+  L2_IN=$(AW "${CUE_START}" "${SUB_CANON}")
+  # line 1 : fade in on the cue, fade out at its end
+  FILTER="${FILTER};[${IDX}:v]format=rgba,fade=t=in:st=${CUE_START}:d=${SUB_FADE_IN}:alpha=1"
+  FILTER="${FILTER},fade=t=out:st=${OUT_ST}:d=${SUB_FADE_OUT}:alpha=1[f${c}a]"
+  FILTER="${FILTER};${CHAIN}[f${c}a]overlay=0:0:enable='between(t,${CUE_START},${END})'[a${c}]"
+  IDX=$((IDX + 1))
+  # line 2 : same, one canon delay later
+  FILTER="${FILTER};[${IDX}:v]format=rgba,fade=t=in:st=${L2_IN}:d=${SUB_FADE_IN}:alpha=1"
+  FILTER="${FILTER},fade=t=out:st=${OUT_ST}:d=${SUB_FADE_OUT}:alpha=1[f${c}b]"
+  FILTER="${FILTER};[a${c}][f${c}b]overlay=0:0:enable='between(t,${L2_IN},${END})'[b${c}]"
+  IDX=$((IDX + 1))
+  CHAIN="[b${c}]"
+  CUE_START="${END}"
+done
+FILTER="${FILTER};${CHAIN}format=yuv420p[vout]"
+
+ffmpeg -y -v error -i "${WORK_DIR}/timeline.mp4" \
+  -loop 1 -i "${WORK_DIR}/card_title.png" \
+  -loop 1 -i "${WORK_DIR}/card_cue01_l1.png" -loop 1 -i "${WORK_DIR}/card_cue01_l2.png" \
+  -loop 1 -i "${WORK_DIR}/card_cue02_l1.png" -loop 1 -i "${WORK_DIR}/card_cue02_l2.png" \
+  -loop 1 -i "${WORK_DIR}/card_cue03_l1.png" -loop 1 -i "${WORK_DIR}/card_cue03_l2.png" \
+  -loop 1 -i "${WORK_DIR}/card_cue04_l1.png" -loop 1 -i "${WORK_DIR}/card_cue04_l2.png" \
+  -loop 1 -i "${WORK_DIR}/card_cue05_l1.png" -loop 1 -i "${WORK_DIR}/card_cue05_l2.png" \
+  -filter_complex "${FILTER}" -map "[vout]" \
+  -c:v libx264 -preset "${PRESET}" -crf "${CRF}" -r "${FPS}" -t "${TOTAL_DUR}" \
+  -movflags +faststart "${WORK_DIR}/picture.mp4"
+
+# ---- 5b. Music : cut at 1 min 20 s, fades FIRST, loudness normalised LAST ----
+FADE_OUT_ST=$(/usr/bin/awk -v d="${TOTAL_DUR}" -v f="${MUSIC_FADE_OUT}" 'BEGIN{printf "%.2f", d-f}')
+ffmpeg -y -v error -ss "${MUSIC_IN}" -t "${TOTAL_DUR}" -i "${MUSIC_SRC}" \
+  -af "afade=t=in:st=0:d=${MUSIC_FADE_IN},afade=t=out:st=${FADE_OUT_ST}:d=${MUSIC_FADE_OUT},loudnorm=I=${MUSIC_LUFS}:TP=-1.5:LRA=11" \
+  -ar 48000 -ac 2 "${WORK_DIR}/music.wav"
+ffmpeg -y -v error -i "${WORK_DIR}/picture.mp4" -i "${WORK_DIR}/music.wav" \
+  -map 0:v -map 1:a -c:v copy -c:a aac -b:a 192k -shortest -movflags +faststart "${OUT}"
+
+# ---- 6. Verify what was produced, never trust the exit code alone ----
+ffprobe -v error -select_streams v:0 \
+  -show_entries stream=width,height,r_frame_rate,nb_read_frames -count_frames \
+  -of default=noprint_wrappers=1 "${OUT}"
+ffprobe -v error -select_streams a:0 -show_entries stream=codec_name,channels,sample_rate -of default=nw=1 "${OUT}"
+ffprobe -v error -show_entries format=duration -of default=nw=1 "${OUT}"
+echo "DONE ${OUT} (1080x1920, ${FPS} fps, ${TOTAL_DUR} s, music from ${MUSIC_IN} s at ${MUSIC_LUFS} LUFS)"
